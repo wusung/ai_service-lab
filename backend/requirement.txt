@@ -1,0 +1,12 @@
+websockets
+uvicorn
+gunicorn
+fastapi
+pydub 
+langchain                                                                                                                                                 
+openai
+pyyaml>=5.1
+onnxruntime
+scipy     
+python-dotenv
+faster-whisper

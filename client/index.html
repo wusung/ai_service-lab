@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>錄音並通過 WebSocket 傳輸</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="flex flex-col items-center justify-center h-screen bg-gray-100">
+  <h1 class="text-2xl font-bold mb-6">錄音並通過 WebSocket 傳輸</h1>
+  <input type="text" id="ws-url" placeholder="輸入 WebSocket URL" value="ws://localhost:8000/WEBService/normal" class="p-2 text-lg w-80 mb-4 border border-gray-300 rounded">
+  <div>
+    <button id="start" class="px-4 py-2 text-lg bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">開始錄音</button>
+    <button id="stop" class="px-4 py-2 text-lg bg-red-500 text-white rounded hover:bg-red-600">停止錄音</button>
+  </div>
+
+  <script>
+    let mediaRecorder;
+    let audioChunks = [];
+    let websocket;
+
+    document.getElementById('start').onclick = async function() {
+      const wsUrl = document.getElementById('ws-url').value;
+
+      // 取得麥克風的音頻流
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+      // 創建 MediaRecorder
+      mediaRecorder = new MediaRecorder(stream);
+
+      // 當有音頻數據可用時，將其推入音頻塊陣列
+      mediaRecorder.ondataavailable = function(event) {
+        console.log('onDataAvailable', event.data.size);
+        audioChunks.push(event.data);
+      };
+
+      // 當錄音停止時，將音頻數據發送到 WebSocket
+      mediaRecorder.onstop = function() {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/x-raw' });
+        audioChunks = [];
+
+        // 讀取 Blob 並發送到 WebSocket
+        const reader = new FileReader();
+        reader.onload = function() {
+          console.log('reader.result', reader.result);
+          if (websocket.readyState === WebSocket.OPEN) {
+            console.log('websocket.send', reader.result);
+            websocket.send(reader.result);
+          }
+        };
+        reader.readAsArrayBuffer(audioBlob);
+      };
+
+      if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.close()
+      }
+
+      // 連接 WebSocket
+      websocket = new WebSocket(wsUrl);
+      websocket.onopen = function() {
+        console.log('WebSocket 已連接');
+      };
+      websocket.onerror = function(error) {
+        console.error('WebSocket 發生錯誤：', error);
+      };
+      websocket.onclose = function() {
+        console.log('WebSocket 已關閉');
+      };
+
+      // 開始錄音
+      mediaRecorder.start();
+    };
+
+    document.getElementById('stop').onclick = function() {
+      // 停止錄音
+      mediaRecorder.stop();
+
+      // 關閉 WebSocket
+      // websocket.close();
+    };
+  </script>
+</body>
+</html>
