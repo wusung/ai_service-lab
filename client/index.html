@@ -5,12 +5,18 @@
   <title>錄音並通過 WebSocket 傳輸</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="flex flex-col items-center justify-center h-screen bg-gray-100">
-  <h1 class="text-2xl font-bold mb-6">錄音並通過 WebSocket 傳輸</h1>
-  <input type="text" id="ws-url" placeholder="輸入 WebSocket URL" value="ws://localhost:8000/WEBService/normal" class="p-2 text-lg w-80 mb-4 border border-gray-300 rounded">
-  <div>
-    <button id="start" class="px-4 py-2 text-lg bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">開始錄音</button>
-    <button id="stop" class="px-4 py-2 text-lg bg-red-500 text-white rounded hover:bg-red-600 opacity-50 cursor-not-allowed" disabled>停止錄音</button>
+<body class="flex flex-col items-center justify-center min-h-screen bg-gray-100 px-4 py-8">
+  <h1 class="text-xl md:text-2xl font-bold mb-4 md:mb-6 text-center">錄音並通過 WebSocket 傳輸</h1>
+  <input 
+    type="text" 
+    id="ws-url" 
+    placeholder="輸入 WebSocket URL" 
+    value="ws://localhost:8000/WEBService/normal" 
+    class="p-2 text-base md:text-lg w-full max-w-xs md:max-w-sm mb-4 border border-gray-300 rounded"
+  >
+  <div class="flex flex-col sm:flex-row gap-2">
+    <button id="start" class="px-4 py-2 text-base md:text-lg bg-blue-500 text-white rounded hover:bg-blue-600">開始錄音</button>
+    <button id="stop" class="px-4 py-2 text-base md:text-lg bg-red-500 text-white rounded hover:bg-red-600 opacity-50 cursor-not-allowed" disabled>停止錄音</button>
   </div>
 
   <script>
