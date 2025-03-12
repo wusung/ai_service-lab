@@ -15,21 +15,21 @@ async def normal_asr_loader(
 ):
     client_id = client_id if client_id is not None else "tempx-" + str(uuid.uuid4())
     await engine_whisper(websocket, model_name, client_id)
-    
+
 @router_evas.websocket("/WEBService/normal")
 async def normal_asr_loader(
     websocket: WebSocket, model_name: str = None, client_id: str = None
 ):
     client_id = client_id if client_id is not None else "tempx-" + str(uuid.uuid4())
     await engine_normal(websocket, model_name, client_id)
-    
+
 @router_evas.websocket("/WEBService/whisper")
 async def whisper_asr_loader(
     websocket: WebSocket, model_name: str = None, client_id: str = None
 ):
     client_id = client_id if client_id is not None else "tempx-" + str(uuid.uuid4())
     await engine_whisper(websocket, model_name, client_id)
-    
+
 
 
 async def engine_normal(websocket: WebSocket, model_name: str, client_id: str):
@@ -66,7 +66,7 @@ async def engine_whisper(websocket: WebSocket, model_name: str, client_id: str):
     logging.info("啟動一般收音")
     logging.info("初始化辨識模型")
     audio_data = b""  # 累積音訊資料
-    
+
     while True:
         try:
             datas = await websocket.receive_bytes()
@@ -79,8 +79,8 @@ async def engine_whisper(websocket: WebSocket, model_name: str, client_id: str):
             audio_data += datas  # 累積音訊資料
         except WebSocketDisconnect:
             logging.info("Client disconnected abruptly.")
-            break  # 讓 while 迴圈結束        
-        
+            break  # 讓 while 迴圈結束
+
     full_text = "Welcome to Kenkone"
     logging.info(f"辨識結果: {full_text}, 長度: {len(audio_data)}")
     output = {}
