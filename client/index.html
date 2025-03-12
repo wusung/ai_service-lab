@@ -10,7 +10,7 @@
   <input type="text" id="ws-url" placeholder="輸入 WebSocket URL" value="ws://localhost:8000/WEBService/normal" class="p-2 text-lg w-80 mb-4 border border-gray-300 rounded">
   <div>
     <button id="start" class="px-4 py-2 text-lg bg-blue-500 text-white rounded hover:bg-blue-600 mr-2">開始錄音</button>
-    <button id="stop" class="px-4 py-2 text-lg bg-red-500 text-white rounded hover:bg-red-600">停止錄音</button>
+    <button id="stop" class="px-4 py-2 text-lg bg-red-500 text-white rounded hover:bg-red-600 opacity-50 cursor-not-allowed" disabled>停止錄音</button>
   </div>
 
   <script>
@@ -18,7 +18,10 @@
     let audioChunks = [];
     let websocket;
 
-    document.getElementById('start').onclick = async function() {
+    const startButton = document.getElementById('start');
+    const stopButton = document.getElementById('stop');
+
+    startButton.onclick = async function() {
       const wsUrl = document.getElementById('ws-url').value;
 
       // 取得麥克風的音頻流
@@ -48,6 +51,12 @@
           }
         };
         reader.readAsArrayBuffer(audioBlob);
+
+        // 啟用開始按鈕，禁用停止按鈕
+        startButton.disabled = false;
+        startButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        stopButton.disabled = true;
+        stopButton.classList.add('opacity-50', 'cursor-not-allowed');
       };
 
       if (websocket && websocket.readyState === WebSocket.OPEN) {
@@ -68,11 +77,19 @@
 
       // 開始錄音
       mediaRecorder.start();
+
+      // 禁用開始按鈕，啟用停止按鈕
+      startButton.disabled = true;
+      startButton.classList.add('opacity-50', 'cursor-not-allowed');
+      stopButton.disabled = false;
+      stopButton.classList.remove('opacity-50', 'cursor-not-allowed');
     };
 
-    document.getElementById('stop').onclick = function() {
+    stopButton.onclick = function() {
       // 停止錄音
-      mediaRecorder.stop();
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
 
       // 關閉 WebSocket
       // websocket.close();
