@@ -123,11 +123,13 @@ async def engine_whisper_loader_v3(websocket: WebSocket, model_name: str, client
         try:
             datas = await websocket.receive_bytes()
             if datas == b"":
+                logging.info("data is empty")
                 break
 
             await asyncio.to_thread(models.add_to_buffer, datas)
             last_chunk = await models.asr_flow_normal(websocket)
             if last_chunk:
+                logging.info("last_chunk is true")
                 break
         except WebSocketDisconnect:
             logging.info("Client disconnected abruptly.")
@@ -166,6 +168,34 @@ async def whisper_asr_loader_v1(
 
     except WebSocketDisconnect:
         logging.info("Client disconnected abruptly.")
+
+
+@router_evas.websocket("/WEBService/v2/whisper")
+async def whisper_asr_loader_v2(
+    websocket: WebSocket, model_name: str = None, client_id: str = None
+):
+    await websocket.accept()
+    logging.info("啟動一般收音 whisper_asr_loader_v2")
+    logging.info("初始化辨識模型")
+
+    try:
+        audio_data = await websocket.receive_bytes()
+        print(f"收到音訊，長度: {len(audio_data)}")
+
+        full_text = "Welcome to Kenkone"
+        logging.info(f"辨識結果: {full_text}, 長度: {len(audio_data)}")
+        output = {}
+        output["data"] = [{"text": full_text}]
+        output = json.dumps(output, ensure_ascii=False)
+        output = output.encode(encoding="utf-8")
+
+        await websocket.send_bytes(output)  # 將辨識結果送回前端
+
+    except WebSocketDisconnect:
+        logging.info("Client disconnected abruptly.")
+    finally:
+        logging.info("websocket closed")
+        await websocket.close()
 
 
 async def engine_normal(websocket: WebSocket, model_name: str, client_id: str):
