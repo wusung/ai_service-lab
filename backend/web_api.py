@@ -272,7 +272,7 @@ async def whisper_asr_loader_v3(
 
         # 進行轉錄
         logging.info("進行轉錄")
-        segments, info = model.transcribe(audio_data)
+        segments, info = await asyncio.to_thread(model.transcribe, audio_data)
 
         # 輸出轉錄結果
         full_text = ""
