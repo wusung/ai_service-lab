@@ -1,16 +1,19 @@
 import asyncio
+from io import BytesIO
 import json
 import logging
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 import uuid
 
 from fastapi.websockets import WebSocketState
+from faster_whisper import WhisperModel
 from manager import connect_manager
 router_evas = APIRouter()
 
 logging.basicConfig(level=logging.INFO,
                     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s [%(threadName)s] ")
 
+model = WhisperModel("tiny", device="cpu")
 
 @router_evas.websocket("/WEBService/ServiceServer2")
 async def normal_asr_loader(
@@ -253,3 +256,45 @@ async def engine_whisper(websocket: WebSocket, model_name: str, client_id: str):
     output = output.encode(encoding="utf-8")
     await websocket.send_bytes(output)  # 將辨識結果送回前端
     await websocket.close()
+
+
+@router_evas.websocket("/WEBService/v3/whisper")
+async def whisper_asr_loader_v3(
+    websocket: WebSocket, model_name: str = None, client_id: str = None
+):
+    await websocket.accept()
+    logging.info("啟動一般收音 whisper_asr_loader_v3")
+
+    try:
+        audio_data = await websocket.receive_bytes()
+        audio_data = BytesIO(audio_data)
+        audio_data.seek(0)
+
+        # 進行轉錄
+        logging.info("進行轉錄")
+        segments, info = model.transcribe(audio_data)
+
+        # 輸出轉錄結果
+        full_text = ""
+        for segment in segments:
+            full_text += segment.text
+            print(f"[{segment.start:.2f}s -> {segment.end:.2f}s] {segment.text}")
+
+        logging.info(f"辨識結果: {full_text}")
+        output = {}
+        output["data"] = [{"text": full_text}]
+        output = json.dumps(output, ensure_ascii=False)
+        output = output.encode(encoding="utf-8")
+        await websocket.send_bytes(output)  # 將辨識結果送回前端
+        
+        # TODO: 保存辨識結果, Recoder 在 ai-service 已經有實作了。可以直接用
+        # audio_data.seek(0)
+        # recoder = Recorder(client_id)
+        # recoder.save_full_audio(audio_data)
+        
+
+    except WebSocketDisconnect:
+        logging.info("Client disconnected abruptly.")
+    finally:
+        logging.info("websocket closed")
+        await websocket.close()
