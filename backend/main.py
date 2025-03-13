@@ -2,8 +2,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 
+from web_api import router_evas
+
 # 載入 WebSocket 路由
-from evap_api import router_evas  # 替換成你的實際路由檔案名稱
 
 app = FastAPI()
 
